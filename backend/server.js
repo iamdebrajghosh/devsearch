@@ -24,6 +24,9 @@ app.get("/api/health", (req, res) => {
 app.use("/api/auth", authRoutes);
 const userRoutes = require("./src/routes/userRoutes");
 app.use("/api/user", userRoutes);
+app.use("/uploads", express.static("uploads"));
+const resumeRoutes = require("./src/routes/resumeRoutes");
+app.use("/api/resume", resumeRoutes);
 
 const PORT = process.env.PORT || 5000;
 
