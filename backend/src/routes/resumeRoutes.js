@@ -21,5 +21,6 @@ router.post(
   resumeController.upload
 );
 
-module.exports = router;
+router.get("/me", auth, resumeController.getMe);
 
+module.exports = router;

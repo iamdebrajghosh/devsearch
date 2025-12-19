@@ -1,6 +1,7 @@
 const path = require("path");
 const fs = require("fs");
 const Resume = require("../models/Resume");
+const { extractTextFromResume } = require("../utils/resumeParser");
 
 exports.upload = async (req, res) => {
   try {
@@ -21,15 +22,19 @@ exports.upload = async (req, res) => {
       existing.filePath = filepath;
       existing.fileType = mimetype;
       existing.uploadedAt = new Date();
-      existing.parsedText = existing.parsedText || "";
+      existing.parsedText = "";
       existing.extractedSkills = Array.isArray(existing.extractedSkills) ? existing.extractedSkills : [];
+      const parsedText = await extractTextFromResume(filepath, mimetype);
+      existing.parsedText = parsedText;
       await existing.save();
     } else {
+      const parsedText = await extractTextFromResume(filepath, mimetype);
       await Resume.create({
         userId,
         fileName: filename,
         filePath: filepath,
         fileType: mimetype,
+        parsedText,
       });
     }
 
@@ -45,3 +50,22 @@ exports.upload = async (req, res) => {
   }
 };
 
+exports.getMe = async (req, res) => {
+  try {
+    const resume = await Resume.findOne({ userId: req.user.userId }).select(
+      "fileName fileType uploadedAt parsedText"
+    );
+    if (!resume) {
+      return res.status(404).json({ message: "Not found" });
+    }
+    const preview = (resume.parsedText || "").slice(0, 1000).trim();
+    return res.json({
+      fileName: resume.fileName,
+      fileType: resume.fileType,
+      uploadedAt: resume.uploadedAt,
+      parsedText: preview,
+    });
+  } catch (err) {
+    return res.status(500).json({ message: "Server error" });
+  }
+};
