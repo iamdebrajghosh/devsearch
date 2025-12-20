@@ -22,5 +22,6 @@ router.post(
 );
 
 router.get("/me", auth, resumeController.getMe);
+router.get("/skills", auth, resumeController.getSkills);
 
 module.exports = router;

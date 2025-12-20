@@ -2,6 +2,7 @@ const path = require("path");
 const fs = require("fs");
 const Resume = require("../models/Resume");
 const { extractTextFromResume } = require("../utils/resumeParser");
+const { extractSkills } = require("../utils/skillExtractor");
 
 exports.upload = async (req, res) => {
   try {
@@ -26,6 +27,7 @@ exports.upload = async (req, res) => {
       existing.extractedSkills = Array.isArray(existing.extractedSkills) ? existing.extractedSkills : [];
       const parsedText = await extractTextFromResume(filepath, mimetype);
       existing.parsedText = parsedText;
+      existing.extractedSkills = extractSkills(parsedText);
       await existing.save();
     } else {
       const parsedText = await extractTextFromResume(filepath, mimetype);
@@ -35,6 +37,7 @@ exports.upload = async (req, res) => {
         filePath: filepath,
         fileType: mimetype,
         parsedText,
+        extractedSkills: extractSkills(parsedText),
       });
     }
 
@@ -65,6 +68,17 @@ exports.getMe = async (req, res) => {
       uploadedAt: resume.uploadedAt,
       parsedText: preview,
     });
+  } catch (err) {
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.getSkills = async (req, res) => {
+  try {
+    const resume = await Resume.findOne({ userId: req.user.userId }).select("extractedSkills");
+    if (!resume) return res.status(404).json({ message: "Not found" });
+    const skills = Array.isArray(resume.extractedSkills) ? resume.extractedSkills : [];
+    return res.json({ skills });
   } catch (err) {
     return res.status(500).json({ message: "Server error" });
   }
