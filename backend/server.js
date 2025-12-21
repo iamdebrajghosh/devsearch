@@ -7,10 +7,9 @@ const authRoutes = require("./src/routes/authRoutes");
 
 const app = express();
 
-const corsOrigin = process.env.CORS_ORIGIN || "http://localhost:5173";
 app.use(
   cors({
-    origin: corsOrigin,
+    origin: true,
     credentials: true,
   })
 );
@@ -27,6 +26,8 @@ app.use("/api/user", userRoutes);
 app.use("/uploads", express.static("uploads"));
 const resumeRoutes = require("./src/routes/resumeRoutes");
 app.use("/api/resume", resumeRoutes);
+const jobsRoutes = require("./src/routes/jobsRoutes");
+app.use("/api/jobs", jobsRoutes);
 
 const PORT = process.env.PORT || 5000;
 
