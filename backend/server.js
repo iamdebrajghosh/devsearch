@@ -28,6 +28,8 @@ const resumeRoutes = require("./src/routes/resumeRoutes");
 app.use("/api/resume", resumeRoutes);
 const jobsRoutes = require("./src/routes/jobsRoutes");
 app.use("/api/jobs", jobsRoutes);
+const aiRoutes = require("./src/routes/aiRoutes");
+app.use("/api/ai", aiRoutes);
 
 const PORT = process.env.PORT || 5000;
 

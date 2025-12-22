@@ -5,6 +5,9 @@ export default function JobMatches() {
   const [jobs, setJobs] = useState([]);
   const [error, setError] = useState("");
   const [q, setQ] = useState("");
+  const [advice, setAdvice] = useState(null);
+  const [adviceError, setAdviceError] = useState("");
+  const [adviceLoading, setAdviceLoading] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -27,6 +30,33 @@ export default function JobMatches() {
     const t = q.toLowerCase();
     return jobs.filter((j) => j.title.toLowerCase().includes(t));
   }, [jobs, q]);
+
+  async function getAdvice() {
+    setAdviceError("");
+    setAdvice(null);
+    if (jobs.length === 0) {
+      setAdviceError("Upload your resume to generate advice.");
+      return;
+    }
+    try {
+      setAdviceLoading(true);
+      const top = jobs.slice(0, 5).map((j) => ({
+        id: j.id,
+        title: j.title,
+        requiredSkills: j.requiredSkills,
+        optionalSkills: j.optionalSkills,
+      }));
+      const res = await api.post("/api/ai/recommend", {
+        experienceLevel: "fresher",
+        jobs: top,
+      });
+      setAdvice(res.data);
+    } catch {
+      setAdviceError("Could not generate advice");
+    } finally {
+      setAdviceLoading(false);
+    }
+  }
 
   return (
     <div className="grid">
@@ -59,6 +89,41 @@ export default function JobMatches() {
           </div>
         </div>
       ))}
+      <div className="card">
+        <div className="row">
+          <h3>AI Career Guidance</h3>
+          <button className="btn secondary" onClick={getAdvice} disabled={adviceLoading}>
+            {adviceLoading ? "Generating..." : "Get Advice"}
+          </button>
+        </div>
+        {adviceError && <p className="error">{adviceError}</p>}
+        {advice && (
+          <div style={{ marginTop: 12 }}>
+            <div style={{ marginBottom: 8 }}>
+              <strong>Suggested Roles:</strong>
+              <div>
+                {Array.isArray(advice.roles) && advice.roles.length > 0
+                  ? advice.roles.map((r, i) => (
+                      <div key={i}>{r.title} ({r.matchScore}%)</div>
+                    ))
+                  : "No roles suggested"}
+              </div>
+            </div>
+            <div style={{ marginBottom: 8 }}>
+              <strong>Missing Skills:</strong>
+              <div>
+                {Array.isArray(advice.missingSkills) && advice.missingSkills.length > 0
+                  ? advice.missingSkills.join(", ")
+                  : "None detected"}
+              </div>
+            </div>
+            <div>
+              <strong>30-day Roadmap:</strong>
+              <pre style={{ whiteSpace: "pre-wrap" }}>{advice.roadmap}</pre>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
