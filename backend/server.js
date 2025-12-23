@@ -16,6 +16,10 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
+app.get("/", (req, res) => {
+  res.send("DevSearch API is live. Use /api/health for status.");
+});
+
 app.get("/api/health", (req, res) => {
   res.send("OK");
 });
